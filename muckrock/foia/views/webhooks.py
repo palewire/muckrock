@@ -39,7 +39,7 @@ def lob_webhook(request):
         request.META["HTTP_LOB_SIGNATURE_TIMESTAMP"],
         request.body,
     ):
-        logger.warning("Lob webhook failed verification")
+        logger.warning("Lob webhook failed verification: %s", request.META)
         return HttpResponseForbidden()
 
     try:
@@ -85,4 +85,13 @@ def _validate_lob(signature, timestamp, body):
         digestmod=hashlib.sha256,
     ).hexdigest()
     match = hmac.compare_digest(signature, digest)
-    return match and int(timestamp) / 1000 + 300 > time.time()
+    logger.info(
+        "Lob webhook validate debug: "
+        "signature: %s timestamp: %s digest: %s match: %s time: %s",
+        signature,
+        timestamp,
+        digest,
+        match,
+        time.time(),
+    )
+    return match and int(timestamp) + 300 > time.time()
